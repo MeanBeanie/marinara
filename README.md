@@ -4,6 +4,6 @@ Single File Windowing solution for linguini, to seperate out the libraries to al
 
 | Backend | Compiles | Tested |
 | ------- | -------- | ------ |
-| SDL2    | X        | X      |
+| SDL2    | O        | O      |
 | X11     | X        | X      |
 | Wayland | X        | X      |

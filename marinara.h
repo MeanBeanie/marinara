@@ -2,10 +2,14 @@
 #define MARINARA_H 
 #include <stdlib.h>
 #include <stdint.h>
+#include <errno.h>
 #include <local/logger.h>
 
 #define MARINARADEF static inline
 
+#ifdef MARINARA_FILE
+MARINARADEF void marinara_toPPM(uint32_t* pixels, size_t width, size_t height, const char* filepath);
+#endif // MARINARA FILE
 #ifdef MARINARA_SDL
 #include <SDL2/SDL.h>
 typedef struct {
@@ -38,6 +42,7 @@ MARINARADEF void marinara_closeX11(MarinaraX11* x11);
 #ifdef MARINARA_WAYLAND
 #include <wayland-client.h>
 #include "libReqs/xdg-shell-client-protocol.h"
+#include "libReqs/xdg-shell-protocol.c"
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -72,12 +77,38 @@ MARINARADEF struct wl_buffer* marinara_displayWayland(MarinaraWayland* wayland);
 MARINARADEF int marinara_waylandDisplayDispatch(MarinaraWayland* wayland);
 #endif // MARINARA_WAYLAND
 
-
 #endif // MARINARA_H 
 
 #define MARINARA_IMPLEMENTATION
 #ifdef MARINARA_IMPLEMENTATION 
 
+#ifdef MARINARA_FILE
+MARINARADEF void marinara_toPPM(uint32_t* pixels, size_t width, size_t height, const char* filepath){
+	FILE* file = fopen(filepath, "wb");
+	if(file == NULL){
+		printf("Failed to open file %s with error %s\n", filepath, errno);
+		return;
+	}
+
+	fprintf(file, "P6\n%zu %zu 255\n", width, height);
+	for(int i = 0; i < width*height; i++){
+		uint32_t pixel = pixels[i];
+		uint8_t bytes[3] = {
+			(pixel >> 24)&0xFF,
+			(pixel >> 16)&0xFF,
+			(pixel >> 8)&0xFF,
+		};
+		fwrite(bytes, 3*sizeof(uint8_t), 1, file);
+		int err = ferror(file);
+		if(err > 0){
+			ego_logger("Marinara PPM ERROR", "Failed to write data to file %s with error: %d", filepath, err);
+			break;
+		}
+	}
+
+	fclose(file);
+}
+#endif // MARINARA FILE
 #ifdef MARINARA_SDL
 MARINARADEF void marinara_loadSDL(MarinaraSDL *sdl, size_t width, size_t height, const char *title){
 	sdl->window = NULL;

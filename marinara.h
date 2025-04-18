@@ -1,78 +1,53 @@
-#ifndef MARINARA_H 
-#define MARINARA_H 
-#include <stdlib.h>
-#include <stdint.h>
-#include <errno.h>
-#include <local/logger.h>
+#ifndef MARINARA_H
+#define MARINARA_H
+#include <GLFW/glfw3.h>
 
-#ifdef MARINARA_FILE
-void marinara_toPPM(uint32_t* pixels, size_t width, size_t height, const char* filepath);
-#endif // MARINARA FILE
-#ifdef MARINARA_SDL
-#include <SDL2/SDL.h>
-typedef struct {
-	SDL_Window* window;
-	SDL_Renderer* renderer;
-	SDL_Texture* texture;
-	int loaded;
-} MarinaraSDL;
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-void marinara_loadSDL(MarinaraSDL* sdl, size_t width, size_t height, const char* title);
-void marinara_pixelsToSDL(uint32_t* pixels, size_t width, size_t height, MarinaraSDL* sdl);
-void marinara_closeSDL(MarinaraSDL* sdl);
-int marinara_getSDLEvents(SDL_Event* e);
-#endif // MARINARA_SDL
-#ifdef MARINARA_X11
-#include <X11/Xlib.h>
-typedef struct {
-	Display* display;
-	Window window;
-	GC gc;
-	int loaded;
-} MarinaraX11;
+typedef enum {
+	MARINARA_SUCCESS = 1,
+	MARINARA_BAD_DIMS,
+	MARINARA_FAILED_WINDOW_CREATE,
+	MARINARA_FAILED_GLAD_INIT,
+	MARINARA_FAILED_TEXTURE_CREATE,
+} MarinaraError;
 
-void marinara_loadX11(MarinaraX11* x11, size_t width, size_t height, const char* title);
-void marinara_pixelsToX11(uint32_t* pixels, size_t width, size_t height, MarinaraX11* x11);
-int marinara_nextX11Event(XEvent* event, MarinaraX11* x11);
-void marinara_closeX11(MarinaraX11* x11);
-
-#endif // MARINARA_X11
-#ifdef MARINARA_WAYLAND
-#include <wayland-client.h>
-#include "libReqs/xdg-shell-client-protocol.h"
-#include "libReqs/xdg-shell-protocol.c"
-#include <string.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/mman.h>
-#include <syscall.h>
+/*
+	 Returns a basic explanation of the given error code
+	 NOTE! The returned explanation is not in depth, do not rely on it for specifics 
+*/
+char* marinara_errorToString(MarinaraError error);
 
 typedef struct {
-	struct wl_compositor* compositor;
-	struct wl_shm* shm;
+	GLFWwindow* glfw;
+	size_t width, height;
 
-	struct xdg_wm_base* wmBase;
+	GLuint texture;
+	GLuint shader;
+	GLuint VBO, EBO, VAO;
+} MarinaraWindow;
 
-	struct wl_display* display;
-	struct wl_registry* registry;
-	struct wl_registry_listener registryListener;
+/*
+	 Fills a MarinaraWindow struct with the given parameters, along with initializing GLFW and GLAD
+	 Returns a MarinaraError for the user to do error checking 
+*/
+MarinaraError marinara_createWindow(MarinaraWindow* window, size_t width, size_t height, const char* title);
+void marinara_destroyWindow(MarinaraWindow* window);
 
-	struct wl_surface* surface;
-	struct xdg_surface* xdgSurface;
-	struct xdg_toplevel* toplevel;
+int marinara_createTexture(MarinaraWindow* window, uint32_t* pixels);
+void marinara_updateTexture(MarinaraWindow* window, uint32_t* pixels);
 
-	unsigned char* data;
+int marinara_windowIsOpen(MarinaraWindow window);
+void marinara_presentWindow(MarinaraWindow window);
 
-	uint32_t* pixels;
-	size_t width;
-	size_t height;
+static inline void marinara_framebufferSizeCallback(GLFWwindow* window, int width, int height){
+	glViewport(0, 0, width, height);
+}
 
-	int isOpen;
-} MarinaraWayland;
+#ifdef __cplusplus
+}
+#endif
 
-void marinara_loadWayland(MarinaraWayland* wayland, uint32_t* pixels, uint32_t width, uint32_t height, const char* title);
-struct wl_buffer* marinara_displayWayland(MarinaraWayland* wayland);
-int marinara_waylandDisplayDispatch(MarinaraWayland* wayland);
-#endif // MARINARA_WAYLAND
-
-#endif // MARINARA_H 
+#endif // MARINARA_H

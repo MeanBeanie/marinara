@@ -1,9 +1,4 @@
-# fettuccini
+# marinara 
 
-Single File Windowing solution for linguini, to seperate out the libraries to allow for more usecases
+Simple windowing library, utilizes glfw3 and glad with opengl 3.3 to render an array of pixels to the window vaguely efficiently
 
-| Backend | Compiles | Window |
-| ------- | -------- | ------ |
-| SDL2    | O        | O      |
-| X11     | X        | X      |
-| Wayland | O        | O      |

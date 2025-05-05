@@ -1,7 +1,5 @@
 #include "include/glad/glad.h"
 #include "marinara.h"
-#include <GL/gl.h>
-#include <GL/glext.h>
 #include <GLFW/glfw3.h>
 #include <stdio.h>
 
@@ -124,12 +122,6 @@ MarinaraWindow marinara_createWindow(size_t width, size_t height, const char* ti
 	return window;
 }
 void marinara_destroyWindow(MarinaraWindow* window){
-	glDeleteTextures(1, &window->texture);
-	glDeleteVertexArrays(1, &window->VAO);
-	glDeleteBuffers(1, &window->VBO);
-	glDeleteBuffers(1, &window->EBO);
-	glfwDestroyWindow(window->glfw);
-	window->glfw = NULL;
 	glfwTerminate();
 }
 
@@ -154,7 +146,7 @@ void marinara_createTexture(MarinaraWindow* window, uint32_t *pixels){
 	float borderColor[] = {0.f, 0.f, 0.f, 1.f};
 	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);;
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
